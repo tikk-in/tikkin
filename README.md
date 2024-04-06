@@ -1,4 +1,6 @@
-![Tikk.in](https://raw.githubusercontent.com/fernandonogueira/tikkin/main/assets/logo.jpeg)
+<p align="center">
+  <img width="300" height="300" src="assets/logo_small.png">
+</p>
 
 # Tikk.in
 
