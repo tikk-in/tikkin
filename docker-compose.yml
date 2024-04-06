@@ -1,0 +1,30 @@
+version: '3.7'
+services:
+  tikkin:
+    image: tikkin
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./config.yml:/app/config.yml
+    command:
+      - /app/tikkin --config /app/config.yml --admin-password mys3cret
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: tikkin
+      POSTGRES_PASSWORD: tikkin
+      POSTGRES_DB: tikkin
+    ports:
+      - "5432:5432"
+  migrations:
+    image: flyway/flyway
+    command: -url=jdbc:postgresql://postgres:5432/tikkin -user=tikkin -password=tikkin -connectRetries=60 migrate
+    volumes:
+      - ./migrations:/flyway/sql
+
