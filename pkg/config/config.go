@@ -114,24 +114,31 @@ func ensureDefaultValues(config *Config) {
 	}
 }
 
+type ConfigFlags struct {
+	ConfigPath    string
+	AdminPassword string
+	SMTPPassword  string
+}
+
 // ParseFlags will create and parse the CLI flags
 // and return the path to be used elsewhere
-func ParseFlags() (string, error) {
-	// String that contains the configured configuration path
-	var configPath string
+func ParseFlags() (*ConfigFlags, error) {
+	flags := ConfigFlags{}
 
 	// Set up a CLI flag called "-config" to allow users
 	// to supply the configuration file
-	flag.StringVar(&configPath, "config", "./config.yml", "path to config file")
+	flag.StringVar(&flags.ConfigPath, "config", "./config.yml", "path to config file")
+	flag.StringVar(&flags.AdminPassword, "admin-password", "", "Admin password")
+	flag.StringVar(&flags.SMTPPassword, "smtp-password", "", "SMTP password")
 
 	// Actually parse the flags
 	flag.Parse()
 
 	// Validate the path first
-	if err := ValidateConfigPath(configPath); err != nil {
-		return "", err
+	if err := ValidateConfigPath(flags.ConfigPath); err != nil {
+		return nil, err
 	}
 
 	// Return the configuration path
-	return configPath, nil
+	return &flags, nil
 }

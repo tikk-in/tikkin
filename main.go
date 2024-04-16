@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
@@ -16,27 +15,21 @@ func main() {
 
 	log.Info().Msg("Starting Tikkin")
 
-	adminPassword := ""
-	smtpPassword := ""
-	flag.StringVar(&adminPassword, "admin-password", "", "Admin password")
-	flag.StringVar(&smtpPassword, "smtp-password", "", "SMTP password")
-	flag.Parse()
-
 	// load config
-	cfgPath, err := config.ParseFlags()
+	cfgFlags, err := config.ParseFlags()
 	if err != nil {
 		log.Fatal().Err(err)
 	}
-	cfg, err := config.LoadConfig(cfgPath)
+	cfg, err := config.LoadConfig(cfgFlags.ConfigPath)
 	if err != nil {
 		log.Fatal().Err(err)
 	}
 
-	cfg.Email.SMTP.Password = smtpPassword
+	cfg.Email.SMTP.Password = cfgFlags.SMTPPassword
 
 	db := pkg.NewDB(*cfg)
 
-	admins.EnsureAdmin(cfg, db, adminPassword)
+	admins.EnsureAdmin(cfg, db, cfgFlags.AdminPassword)
 
 	emailHandler := email.NewEmailHandler(cfg)
 	userHandler := pkg.NewUserHandler(db, cfg, &emailHandler)
