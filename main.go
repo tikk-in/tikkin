@@ -22,7 +22,7 @@ func main() {
 	}
 	cfg, err := config.LoadConfig(cfgFlags.ConfigPath)
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("Failed to load config")
 	}
 
 	cfg.Email.SMTP.Password = cfgFlags.SMTPPassword
