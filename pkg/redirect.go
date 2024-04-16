@@ -31,7 +31,7 @@ func (r *RedirectHandler) HandleRedirect(c *fiber.Ctx) error {
 
 func (r *RedirectHandler) getLinkBySlug(slug string) string {
 	link, err := r.LinkHandler.GetLinkBySlug(slug)
-	if err != nil {
+	if err != nil || link == nil {
 		return "not_found"
 	}
 	return link.TargetUrl

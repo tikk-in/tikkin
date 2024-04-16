@@ -9,6 +9,7 @@ import (
 	"tikkin/pkg"
 	"tikkin/pkg/admins"
 	"tikkin/pkg/config"
+	"tikkin/pkg/email"
 )
 
 func main() {
@@ -16,7 +17,9 @@ func main() {
 	log.Info().Msg("Starting Tikkin")
 
 	adminPassword := ""
+	smtpPassword := ""
 	flag.StringVar(&adminPassword, "admin-password", "", "Admin password")
+	flag.StringVar(&smtpPassword, "smtp-password", "", "SMTP password")
 	flag.Parse()
 
 	// load config
@@ -29,11 +32,14 @@ func main() {
 		log.Fatal().Err(err)
 	}
 
+	cfg.Email.SMTP.Password = smtpPassword
+
 	db := pkg.NewDB(*cfg)
 
 	admins.EnsureAdmin(cfg, db, adminPassword)
 
-	userHandler := pkg.NewUserHandler(db)
+	emailHandler := email.NewEmailHandler(cfg)
+	userHandler := pkg.NewUserHandler(db, cfg, &emailHandler)
 	linkHandler := pkg.NewLinkHandler(db, cfg)
 	redirectHandler := pkg.NewRedirectHandler(linkHandler)
 
@@ -43,6 +49,8 @@ func main() {
 
 	// Unauthenticated routes
 	app.Post("/api/v1/auth/login", loginHandler.HandleLogin)
+	app.Post("/api/v1/auth/signup", loginHandler.HandleRegister)
+	app.Get("/api/v1/auth/verify/:token", userHandler.HandleVerification)
 	app.Get("/:slug", redirectHandler.HandleRedirect)
 
 	app.Use(jwtware.New(jwtware.Config{

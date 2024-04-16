@@ -35,8 +35,28 @@ type LinksConfig struct {
 	Length int `yaml:"length"`
 }
 
+type SMTPConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	From     string `yaml:"from"`
+}
+
+type EmailConfig struct {
+	Enabled bool       `yaml:"enabled"`
+	SMTP    SMTPConfig `yaml:"smtp"`
+}
+
+type SiteConfig struct {
+	Name string `yaml:"name"`
+	URL  string `yaml:"url"`
+}
+
 type Config struct {
 	Server   ServerConfig   `yaml:"server"`
+	Site     SiteConfig     `yaml:"site"`
+	Email    EmailConfig    `yaml:"email"`
 	Admin    AdminConfig    `yaml:"admin"`
 	Database DatabaseConfig `yaml:"db"`
 	Links    LinksConfig    `yaml:"links"`

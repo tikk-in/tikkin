@@ -3,6 +3,18 @@ server:
   jwt:
     secret: "changemeplease"
 
+site:
+  name: "Tikk.in"
+  url: https://tikk.in
+
+email:
+  enabled: true
+  smtp:
+    host:
+    port: 587
+    username:
+    from: "noreply@tikk.in"
+
 db:
   user: "tikkin"
   database: "tikkin"

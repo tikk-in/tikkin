@@ -5,6 +5,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/zerolog/log"
 	"tikkin/pkg/config"
+	"tikkin/pkg/model"
 	"tikkin/pkg/utils"
 	"time"
 )
@@ -62,4 +63,39 @@ func (l *AuthHandler) HandleLogin(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"token": t})
+}
+
+func (l *AuthHandler) HandleRegister(c *fiber.Ctx) error {
+	login := new(Login)
+	err := c.BodyParser(login)
+	if err != nil {
+		log.Err(err).Msg("Cannot parse JSON")
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	if login.Email == "" || login.Password == "" {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	hashedPassword, err := utils.HashPassword(login.Password)
+	if err != nil {
+		log.Err(err).Msg("Failed to hash password")
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	login.Password = hashedPassword
+
+	user := model.User{
+		Email:    login.Email,
+		Password: login.Password,
+		Verified: false,
+	}
+
+	_, err = l.UserHandler.CreateUser(user)
+	if err != nil {
+		log.Err(err).Msg("Failed to create user")
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	return c.Status(fiber.StatusCreated).Send(nil)
 }
