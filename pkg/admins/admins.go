@@ -30,7 +30,19 @@ func EnsureAdmin(cfg *config.Config, db *pkg.DB, adminPassword string) {
 	}
 
 	if admin.ID != 0 {
-		log.Info().Str("email", cfg.Admin.Email).Msg("Admin found. Skipping creation...")
+		log.Info().Str("email", cfg.Admin.Email).Msg("Admin found. Checking credentials...")
+		if !utils.DoesPasswordHashMatch(adminPassword, admin.Password) {
+			log.Warn().Msg("Admin password does not match provided password. Updating password...")
+			hash, err := utils.HashPassword(adminPassword)
+			if err != nil {
+				log.Panic().Err(err).Msg("Failed to hash password")
+			}
+			_, err = db.Pool.Exec(context.Background(), "UPDATE users SET password = $1 WHERE id = $2", hash, admin.ID)
+			if err != nil {
+				log.Panic().Err(err).Msg("Failed to update admin password")
+			}
+			log.Info().Str("email", cfg.Admin.Email).Msg("Admin password updated")
+		}
 		return
 	}
 
