@@ -125,7 +125,26 @@ func (l *LinkHandler) HandleDeleteLink(ctx *fiber.Ctx) error {
 }
 
 func (l *LinkHandler) HandleGetLinks(ctx *fiber.Ctx) error {
-	return ctx.SendString("Get links")
+	page := ctx.QueryInt("page")
+	if page < 0 {
+		page = 0
+	}
+	user := ctx.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	userId := claims["user_id"].(float64)
+	if userId == 0 {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "unauthorized",
+		})
+	}
+
+	links, err := l.GetUserLinks(int64(userId), page)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get links",
+		})
+	}
+	return ctx.JSON(links)
 }
 
 func (l *LinkHandler) GetLink(id int) (*model.Link, error) {
@@ -157,4 +176,28 @@ func (l *LinkHandler) GetLinkBySlug(slug string) (*model.Link, error) {
 	}
 
 	return &link, nil
+}
+
+func (l *LinkHandler) GetUserLinks(id int64, page int) ([]model.Link, error) {
+	rows, err := l.db.Pool.Query(context.Background(),
+		"SELECT id, slug, description, banned, expire_at, target_url, created_at, updated_at FROM links WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
+		id, 20, page*20)
+	if err != nil {
+		log.Err(err).Msg("Failed to get links")
+		return nil, err
+	}
+
+	links := make([]model.Link, 0)
+	for rows.Next() {
+		link := model.Link{}
+		err = rows.Scan(&link.ID, &link.UserId, &link.Slug, &link.Description, &link.Banned,
+			&link.ExpireAt, &link.TargetUrl, &link.CreatedAt, &link.UpdatedAt)
+		if err != nil {
+			log.Err(err).Msg("Failed to scan link")
+			return nil, err
+		}
+		links = append(links, link)
+	}
+
+	return links, nil
 }
