@@ -9,4 +9,4 @@ FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /app/tikkin /app/tikkin
 
-ENTRYPOINT ["./tikkin"]
+ENTRYPOINT ["/app/tikkin"]
