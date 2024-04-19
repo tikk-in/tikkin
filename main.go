@@ -5,10 +5,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 	"strconv"
-	"tikkin/pkg"
 	"tikkin/pkg/admins"
 	"tikkin/pkg/config"
+	"tikkin/pkg/db"
 	"tikkin/pkg/email"
+	"tikkin/pkg/handlers"
 )
 
 func main() {
@@ -27,18 +28,18 @@ func main() {
 
 	cfg.Email.SMTP.Password = cfgFlags.SMTPPassword
 
-	db := pkg.NewDB(*cfg)
+	db := db.NewDB(*cfg)
 
 	admins.EnsureAdmin(cfg, db, cfgFlags.AdminPassword)
 
 	emailHandler := email.NewEmailHandler(cfg)
-	userHandler := pkg.NewUserHandler(db, cfg, &emailHandler)
-	linkHandler := pkg.NewLinkHandler(db, cfg)
-	redirectHandler := pkg.NewRedirectHandler(linkHandler)
+	userHandler := handlers.NewUserHandler(db, cfg, &emailHandler)
+	linkHandler := handlers.NewLinkHandler(db, cfg)
+	redirectHandler := handlers.NewRedirectHandler(linkHandler)
 
 	app := fiber.New()
 
-	loginHandler := pkg.NewLoginHandler(cfg, db, userHandler)
+	loginHandler := handlers.NewLoginHandler(cfg, db, userHandler)
 
 	// Unauthenticated routes
 	app.Post("/api/v1/auth/login", loginHandler.HandleLogin)

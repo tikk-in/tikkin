@@ -94,8 +94,10 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 	ensureDefaultValues(config)
 	log.Info().
-		Msgf("Loaded config: server.port=%d, server.jwt.secret=<redacted>, db.host=%s,  db.port=%d, db.user=%s, db.password=<redacted>, db.database=%s, db.connections=%d, links.length=%d",
-			config.Server.Port, config.Database.Host, config.Database.Port, config.Database.User, config.Database.Database, config.Database.Connections, config.Links.Length)
+		Msgf("Loaded config: server.port=%d, server.jwt.secret=<redacted>, db.host=%s,  db.port=%d, db.user=%s, db.password=<redacted>, db.database=%s, db.connections=%d, links.length=%d, email.enabled=%t, email.smtp.host=%s, email.smtp.port=%d, email.smtp.username=%s, email.smtp.from=%s, site.name=%s, site.url=%s",
+			config.Server.Port, config.Database.Host, config.Database.Port, config.Database.User, config.Database.Database,
+			config.Database.Connections, config.Links.Length, config.Email.Enabled, config.Email.SMTP.Host,
+			config.Email.SMTP.Port, config.Email.SMTP.Username, config.Email.SMTP.From, config.Site.Name, config.Site.URL)
 	return config, nil
 }
 

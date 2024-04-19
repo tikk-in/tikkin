@@ -1,10 +1,11 @@
-package pkg
+package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/zerolog/log"
 	"tikkin/pkg/config"
+	db2 "tikkin/pkg/db"
 	"tikkin/pkg/model"
 	"tikkin/pkg/utils"
 	"time"
@@ -17,11 +18,11 @@ type Login struct {
 
 type AuthHandler struct {
 	Config      *config.Config
-	db          *DB
+	db          *db2.DB
 	UserHandler UserHandler
 }
 
-func NewLoginHandler(cfg *config.Config, db *DB, userHandler UserHandler) *AuthHandler {
+func NewLoginHandler(cfg *config.Config, db *db2.DB, userHandler UserHandler) *AuthHandler {
 	return &AuthHandler{Config: cfg, db: db, UserHandler: userHandler}
 }
 
@@ -91,7 +92,7 @@ func (l *AuthHandler) HandleRegister(c *fiber.Ctx) error {
 		Verified: false,
 	}
 
-	_, err = l.UserHandler.CreateUser(user)
+	_, err = l.UserHandler.SignUpUser(user)
 	if err != nil {
 		log.Err(err).Msg("Failed to create user")
 		return c.SendStatus(fiber.StatusInternalServerError)

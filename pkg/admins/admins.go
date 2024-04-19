@@ -3,13 +3,13 @@ package admins
 import (
 	"context"
 	"github.com/rs/zerolog/log"
-	"tikkin/pkg"
 	"tikkin/pkg/config"
+	"tikkin/pkg/db"
 	"tikkin/pkg/model"
 	"tikkin/pkg/utils"
 )
 
-func EnsureAdmin(cfg *config.Config, db *pkg.DB, adminPassword string) {
+func EnsureAdmin(cfg *config.Config, db *db.DB, adminPassword string) {
 
 	log.Info().Msg("Ensuring admin...")
 

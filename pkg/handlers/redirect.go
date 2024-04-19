@@ -1,4 +1,4 @@
-package pkg
+package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -30,7 +30,7 @@ func (r *RedirectHandler) HandleRedirect(c *fiber.Ctx) error {
 }
 
 func (r *RedirectHandler) getLinkBySlug(slug string) string {
-	link, err := r.LinkHandler.GetLinkBySlug(slug)
+	link, err := r.LinkHandler.repository.GetLinkBySlug(slug)
 	if err != nil || link == nil {
 		return "not_found"
 	}

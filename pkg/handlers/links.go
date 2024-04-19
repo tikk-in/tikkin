@@ -1,4 +1,4 @@
-package pkg
+package handlers
 
 import (
 	"context"
@@ -8,7 +8,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/zerolog/log"
 	"tikkin/pkg/config"
+	db2 "tikkin/pkg/db"
 	"tikkin/pkg/model"
+	"tikkin/pkg/repository"
 	"tikkin/pkg/utils"
 )
 
@@ -17,12 +19,14 @@ const DefaultAlphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrs
 var BLOCKED_SLUGS = []string{"admin", "api", "auth", "login", "logout", "register", "links", "users", "not_found"}
 
 type LinkHandler struct {
-	db     *DB
-	Config *config.Config
+	db         *db2.DB
+	Config     *config.Config
+	repository *repository.LinksRepository
 }
 
-func NewLinkHandler(db *DB, config *config.Config) LinkHandler {
-	return LinkHandler{db: db, Config: config}
+func NewLinkHandler(db *db2.DB, config *config.Config) LinkHandler {
+	repo := repository.NewLinksRepository(db)
+	return LinkHandler{db: db, Config: config, repository: &repo}
 }
 
 func (l *LinkHandler) generateSlug() string {
@@ -60,7 +64,7 @@ func (l *LinkHandler) HandleCreateLink(c *fiber.Ctx) error {
 	userId := claims["user_id"].(float64)
 	link.UserId = int(userId)
 
-	existingLink, err := l.GetLinkBySlug(link.Slug)
+	existingLink, err := l.repository.GetLinkBySlug(link.Slug)
 	if err != nil {
 		log.Err(err).Msg("Failed to check if slug exists")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -111,7 +115,7 @@ func (l *LinkHandler) createLink(link model.Link) (*model.Link, error) {
 		return nil, err
 	}
 
-	return l.GetLink(linkId)
+	return l.repository.GetLink(linkId)
 
 	// Save the link to the database
 }
@@ -138,66 +142,11 @@ func (l *LinkHandler) HandleGetLinks(ctx *fiber.Ctx) error {
 		})
 	}
 
-	links, err := l.GetUserLinks(int64(userId), page)
+	links, err := l.repository.GetUserLinks(int64(userId), page)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to get links",
 		})
 	}
 	return ctx.JSON(links)
-}
-
-func (l *LinkHandler) GetLink(id int) (*model.Link, error) {
-	link := model.Link{}
-	err := l.db.Pool.QueryRow(context.Background(),
-		"SELECT id, user_id, slug, description, banned, expire_at, target_url, created_at, updated_at FROM links WHERE id = $1", id).
-		Scan(&link.ID, &link.UserId, &link.Slug, &link.Description, &link.Banned,
-			&link.ExpireAt, &link.TargetUrl, &link.CreatedAt, &link.UpdatedAt)
-	if err != nil {
-		log.Err(err).Msg("Failed to find link")
-		return nil, err
-	}
-
-	return &link, nil
-}
-
-func (l *LinkHandler) GetLinkBySlug(slug string) (*model.Link, error) {
-	link := model.Link{}
-	err := l.db.Pool.QueryRow(context.Background(),
-		"SELECT id, user_id, slug, description, banned, expire_at, target_url, created_at, updated_at FROM links WHERE slug = $1", slug).
-		Scan(&link.ID, &link.UserId, &link.Slug, &link.Description, &link.Banned,
-			&link.ExpireAt, &link.TargetUrl, &link.CreatedAt, &link.UpdatedAt)
-	if err != nil {
-		if err.Error() == "no rows in result set" {
-			return nil, nil
-		}
-		log.Err(err).Msg("Failed to find link")
-		return nil, err
-	}
-
-	return &link, nil
-}
-
-func (l *LinkHandler) GetUserLinks(id int64, page int) ([]model.Link, error) {
-	rows, err := l.db.Pool.Query(context.Background(),
-		"SELECT id, slug, description, banned, expire_at, target_url, created_at, updated_at FROM links WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
-		id, 20, page*20)
-	if err != nil {
-		log.Err(err).Msg("Failed to get links")
-		return nil, err
-	}
-
-	links := make([]model.Link, 0)
-	for rows.Next() {
-		link := model.Link{}
-		err = rows.Scan(&link.ID, &link.Slug, &link.Description, &link.Banned,
-			&link.ExpireAt, &link.TargetUrl, &link.CreatedAt, &link.UpdatedAt)
-		if err != nil {
-			log.Err(err).Msg("Failed to scan link")
-			return nil, err
-		}
-		links = append(links, link)
-	}
-
-	return links, nil
 }
