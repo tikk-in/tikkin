@@ -190,7 +190,7 @@ func (l *LinkHandler) GetUserLinks(id int64, page int) ([]model.Link, error) {
 	links := make([]model.Link, 0)
 	for rows.Next() {
 		link := model.Link{}
-		err = rows.Scan(&link.ID, &link.UserId, &link.Slug, &link.Description, &link.Banned,
+		err = rows.Scan(&link.ID, &link.Slug, &link.Description, &link.Banned,
 			&link.ExpireAt, &link.TargetUrl, &link.CreatedAt, &link.UpdatedAt)
 		if err != nil {
 			log.Err(err).Msg("Failed to scan link")
