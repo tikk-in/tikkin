@@ -8,7 +8,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/zerolog/log"
 	"tikkin/pkg/config"
-	db2 "tikkin/pkg/db"
+	"tikkin/pkg/db"
+	"tikkin/pkg/dto"
 	"tikkin/pkg/model"
 	"tikkin/pkg/repository"
 	"tikkin/pkg/utils"
@@ -19,14 +20,16 @@ const DefaultAlphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrs
 var BLOCKED_SLUGS = []string{"admin", "api", "auth", "login", "logout", "register", "links", "users", "not_found"}
 
 type LinkHandler struct {
-	db         *db2.DB
-	Config     *config.Config
-	repository *repository.LinksRepository
+	db               *db.DB
+	Config           *config.Config
+	repository       *repository.LinksRepository
+	visitsRepository *repository.VisitsRepository
 }
 
-func NewLinkHandler(db *db2.DB, config *config.Config) LinkHandler {
+func NewLinkHandler(db *db.DB, config *config.Config) LinkHandler {
 	repo := repository.NewLinksRepository(db)
-	return LinkHandler{db: db, Config: config, repository: &repo}
+	visitRepo := repository.NewVisitsRepository(db)
+	return LinkHandler{db: db, Config: config, repository: &repo, visitsRepository: &visitRepo}
 }
 
 func (l *LinkHandler) generateSlug() string {
@@ -62,7 +65,7 @@ func (l *LinkHandler) HandleCreateLink(c *fiber.Ctx) error {
 
 	claims := user.Claims.(jwt.MapClaims)
 	userId := claims["user_id"].(float64)
-	link.UserId = int(userId)
+	link.UserId = int64(userId)
 
 	existingLink, err := l.repository.GetLinkBySlug(link.Slug)
 	if err != nil {
@@ -148,5 +151,22 @@ func (l *LinkHandler) HandleGetLinks(ctx *fiber.Ctx) error {
 			"error": "Failed to get links",
 		})
 	}
-	return ctx.JSON(links)
+
+	dtos := make([]dto.LinkDTO, len(links))
+	for i, link := range links {
+
+		visits := l.visitsRepository.CountVisits(link)
+		dtos[i] = dto.LinkDTO{
+			ID:          link.ID,
+			Slug:        link.Slug,
+			Description: link.Description,
+			TargetUrl:   link.TargetUrl,
+			CreatedAt:   link.CreatedAt,
+			UpdatedAt:   link.UpdatedAt,
+			ExpireAt:    link.ExpireAt,
+			Visits:      visits,
+		}
+	}
+
+	return ctx.JSON(dtos)
 }

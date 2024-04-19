@@ -5,7 +5,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/zerolog/log"
 	"tikkin/pkg/config"
-	db2 "tikkin/pkg/db"
+	"tikkin/pkg/db"
 	"tikkin/pkg/model"
 	"tikkin/pkg/utils"
 	"time"
@@ -18,11 +18,11 @@ type Login struct {
 
 type AuthHandler struct {
 	Config      *config.Config
-	db          *db2.DB
+	db          *db.DB
 	UserHandler UserHandler
 }
 
-func NewLoginHandler(cfg *config.Config, db *db2.DB, userHandler UserHandler) *AuthHandler {
+func NewLoginHandler(cfg *config.Config, db *db.DB, userHandler UserHandler) *AuthHandler {
 	return &AuthHandler{Config: cfg, db: db, UserHandler: userHandler}
 }
 

@@ -52,7 +52,7 @@ func (u *UserHandler) HandleVerification(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"message": "User verified"})
 }
 
-func (u *UserHandler) SignUpUser(user model.User) (interface{}, error) {
+func (u *UserHandler) SignUpUser(user model.User) (*model.User, error) {
 	createdUser, err := u.repository.CreateUser(user)
 	if err != nil {
 		return nil, err

@@ -1,10 +1,11 @@
-package model
+package dto
 
-import "time"
+import (
+	"time"
+)
 
-type Link struct {
+type LinkDTO struct {
 	ID          int64      `json:"id"`
-	UserId      int64      `json:"-"`
 	Slug        string     `json:"slug"`
 	Description string     `json:"description"`
 	Banned      bool       `json:"banned"`
@@ -12,4 +13,5 @@ type Link struct {
 	TargetUrl   string     `json:"target_url"`
 	CreatedAt   *time.Time `json:"created_at"`
 	UpdatedAt   *time.Time `json:"updated_at"`
+	Visits      int64      `json:"visits"`
 }
