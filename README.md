@@ -15,6 +15,32 @@ It is built using Go, PostgreSQL, and Redis (optional).
 - **Custom Alias**: You can set a custom alias for the shortened URL.
 - **Configuration as Code**: Tikk.in can be fully configured using environment variables.
 
+## Installation
+
+### Docker compose
+
+It will build the Docker image and run tikkin + PostgreSQL
+```bash
+docker compose up
+```
+
+### Docker image
+
+```bash
+docker pull tikkin/tikkin:latest
+```
+
+### From source
+
+Clone the repository and build
+```bash
+go mod download
+go build -o tikkin
+
+# Run the binary
+./tikkin --admin-password=<your-pass> --config=./your-config.yml
+```
+
 ## Configuration
 
 Tikk.in requires a configuration file to run. Check out the [example configuration file](config.yml) for more
