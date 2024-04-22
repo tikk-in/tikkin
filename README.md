@@ -43,7 +43,7 @@ go build -o tikkin
 
 ## Configuration
 
-Tikk.in requires a configuration file to run. Check out the [example configuration file](config.yml) for more
+Tikk.in requires a configuration file to run. Check out the [example configuration file](example.config.yml) for more
 information.
 
 The configuration file path can be provided using the `CONFIG_PATH` environment variable or by using the `--config`
