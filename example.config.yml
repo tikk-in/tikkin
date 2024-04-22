@@ -1,0 +1,31 @@
+server:
+  port: 3000
+  jwt:
+    secret: "changemeplease"
+
+site:
+  name: "Tikk.in"
+  url: https://example.com
+
+email:
+  enabled: false
+  smtp:
+    host: ""
+    port: 587
+    username: ""
+    from: "noreply@example.com"
+
+db:
+  host: localhost
+  port: 5432
+  user: "tikkin"
+  password: "tikkin"
+  database: "tikkin"
+  connections: 10
+
+admin:
+  email: ""
+
+links:
+  length: 6
+
