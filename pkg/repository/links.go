@@ -113,3 +113,15 @@ func (l *LinksRepository) DeleteLink(id int64) error {
 
 	return nil
 }
+
+func (l *LinksRepository) UpdateLink(id int64, link model.Link) (*model.Link, error) {
+	_, err := l.db.Pool.Exec(context.Background(),
+		"UPDATE links SET description = $1, target_url = $2, updated_at = NOW() WHERE id = $3 AND user_id = $4",
+		link.Description, link.TargetUrl, id, link.UserId)
+	if err != nil {
+		log.Err(err).Msg("Failed to update link")
+		return nil, err
+	}
+
+	return l.GetLink(id)
+}
