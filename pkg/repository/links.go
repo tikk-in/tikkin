@@ -3,10 +3,12 @@ package repository
 import (
 	"context"
 	"errors"
+	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
 	"tikkin/pkg/config"
 	"tikkin/pkg/db"
 	"tikkin/pkg/model"
+	"tikkin/pkg/repository/queries"
 	"tikkin/pkg/utils"
 )
 
@@ -19,59 +21,49 @@ func NewLinksRepository(db *db.DB, config *config.Config) LinksRepository {
 	return LinksRepository{db: db, config: config}
 }
 
-func (l *LinksRepository) GetLink(id int64) (*model.Link, error) {
-	link := model.Link{}
-	err := l.db.Pool.QueryRow(context.Background(),
-		"SELECT id, user_id, slug, description, banned, expire_at, target_url, created_at, updated_at FROM links WHERE id = $1", id).
-		Scan(&link.ID, &link.UserId, &link.Slug, &link.Description, &link.Banned,
-			&link.ExpireAt, &link.TargetUrl, &link.CreatedAt, &link.UpdatedAt)
+func (l *LinksRepository) GetLinkByID(id int64) (*model.Link, error) {
+
+	linkEntity, err := l.db.Queries.GetLinkByID(context.Background(), id)
 	if err != nil {
 		log.Err(err).Msg("Failed to find link")
 		return nil, err
 	}
 
-	return &link, nil
+	return linkEntity.ToModel(), nil
 }
 
-func (l *LinksRepository) GetUserLinks(id int64, page int) ([]model.Link, error) {
-	rows, err := l.db.Pool.Query(context.Background(),
-		"SELECT id, slug, description, banned, expire_at, target_url, created_at, updated_at FROM links WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
-		id, 20, page*20)
+func (l *LinksRepository) GetUserLinks(userId int64, page int32) ([]model.Link, error) {
+
+	params := queries.GetUserLinksParams{
+		Userid:      userId,
+		Queryoffset: 20,
+		Maxresults:  page * 20,
+	}
+
+	results, err := l.db.Queries.GetUserLinks(context.Background(), params)
 	if err != nil {
-		log.Err(err).Msg("Failed to get links")
+		log.Err(err).Msg("Failed to find user links")
 		return nil, err
 	}
 
-	links := make([]model.Link, 0)
-	for rows.Next() {
-		link := model.Link{}
-		err = rows.Scan(&link.ID, &link.Slug, &link.Description, &link.Banned,
-			&link.ExpireAt, &link.TargetUrl, &link.CreatedAt, &link.UpdatedAt)
-		if err != nil {
-			log.Err(err).Msg("Failed to scan link")
-			return nil, err
-		}
-		links = append(links, link)
+	var links []model.Link
+	for _, result := range results {
+		links = append(links, *result.ToModel())
 	}
 
 	return links, nil
 }
 
 func (l *LinksRepository) GetLinkBySlug(slug string) (*model.Link, error) {
-	link := model.Link{}
-	err := l.db.Pool.QueryRow(context.Background(),
-		"SELECT id, user_id, slug, description, banned, expire_at, target_url, created_at, updated_at FROM links WHERE slug = $1", slug).
-		Scan(&link.ID, &link.UserId, &link.Slug, &link.Description, &link.Banned,
-			&link.ExpireAt, &link.TargetUrl, &link.CreatedAt, &link.UpdatedAt)
+	link, err := l.db.Queries.GetLinkBySlug(context.Background(), slug)
 	if err != nil {
-		if err.Error() == "no rows in result set" {
+		if err.Error() == pgx.ErrNoRows.Error() {
 			return nil, nil
 		}
 		log.Err(err).Msg("Failed to find link")
 		return nil, err
 	}
-
-	return &link, nil
+	return link.ToModel(), nil
 }
 
 func (l *LinksRepository) CreateLink(link model.Link) (*model.Link, error) {
@@ -91,21 +83,26 @@ func (l *LinksRepository) CreateLink(link model.Link) (*model.Link, error) {
 		return nil, errors.New("slug_denied")
 	}
 
-	linkId := int64(0)
-	err := l.db.Pool.QueryRow(context.Background(),
-		"INSERT INTO links (user_id, slug, description, expire_at, target_url) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-		link.UserId, link.Slug, link.Description, nil, link.TargetUrl).Scan(&linkId)
+	res, err := l.db.Queries.CreateLink(context.Background(),
+		queries.CreateLinkParams{
+			UserID:      link.UserId,
+			Slug:        link.Slug,
+			Description: &link.Description,
+			ExpireAt:    nil,
+			TargetUrl:   link.TargetUrl,
+		})
 
 	if err != nil {
 		log.Err(err).Msg("Failed to create link")
 		return nil, err
 	}
 
-	return l.GetLink(linkId)
+	return res.ToModel(), nil
 }
 
 func (l *LinksRepository) DeleteLink(id int64) error {
-	_, err := l.db.Pool.Exec(context.Background(), "DELETE FROM links WHERE id = $1", id)
+
+	err := l.db.Queries.DeleteLinkByID(context.Background(), id)
 	if err != nil {
 		log.Err(err).Msg("Failed to delete link")
 		return err
@@ -115,13 +112,18 @@ func (l *LinksRepository) DeleteLink(id int64) error {
 }
 
 func (l *LinksRepository) UpdateLink(id int64, link model.Link) (*model.Link, error) {
-	_, err := l.db.Pool.Exec(context.Background(),
-		"UPDATE links SET description = $1, target_url = $2, updated_at = NOW() WHERE id = $3 AND user_id = $4",
-		link.Description, link.TargetUrl, id, link.UserId)
+
+	updatedLink, err := l.db.Queries.UpdateLink(context.Background(), queries.UpdateLinkParams{
+		ID:          id,
+		UserID:      link.UserId,
+		Description: &link.Description,
+		TargetUrl:   link.TargetUrl,
+	})
+
 	if err != nil {
 		log.Err(err).Msg("Failed to update link")
 		return nil, err
 	}
 
-	return l.GetLink(id)
+	return updatedLink.ToModel(), nil
 }

@@ -1,0 +1,6 @@
+ALTER TABLE users
+    ALTER COLUMN created_at SET NOT NULL;
+ALTER TABLE users
+    ALTER COLUMN updated_at SET NOT NULL;
+ALTER TABLE users
+    ALTER COLUMN verified SET NOT NULL;

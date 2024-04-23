@@ -10,6 +10,6 @@ type Link struct {
 	Banned      bool       `json:"banned"`
 	ExpireAt    *time.Time `json:"expire_at"`
 	TargetUrl   string     `json:"target_url"`
-	CreatedAt   *time.Time `json:"created_at"`
-	UpdatedAt   *time.Time `json:"updated_at"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
 }
