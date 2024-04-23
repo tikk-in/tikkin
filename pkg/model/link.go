@@ -4,7 +4,7 @@ import "time"
 
 type Link struct {
 	ID          int64      `json:"id"`
-	UserId      int64      `json:"-"`
+	UserId      int64      `json:"-" swaggerignore:"true"`
 	Slug        string     `json:"slug"`
 	Description string     `json:"description"`
 	Banned      bool       `json:"banned"`

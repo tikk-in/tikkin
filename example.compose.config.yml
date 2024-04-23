@@ -29,3 +29,5 @@ admin:
 links:
   length: 6
 
+docs:
+  enabled: true

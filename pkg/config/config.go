@@ -45,6 +45,11 @@ type SiteConfig struct {
 	URL  string `yaml:"url"`
 }
 
+type DocsConfig struct {
+	Enabled         bool   `yaml:"enabled"`
+	OverrideSiteUrl string `yaml:"overrideSiteUrl"`
+}
+
 type Config struct {
 	Server   ServerConfig   `yaml:"server"`
 	Site     SiteConfig     `yaml:"site"`
@@ -52,6 +57,7 @@ type Config struct {
 	Admin    AdminConfig    `yaml:"admin"`
 	Database DatabaseConfig `yaml:"db"`
 	Links    LinksConfig    `yaml:"links"`
+	Docs     DocsConfig     `yaml:"docs"`
 }
 
 type ConfigFlags struct {
