@@ -8,6 +8,11 @@ import (
 const defaultAlphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 var BlockedSlugs = []string{"admin", "api", "auth", "login", "logout", "register", "links", "users", "not_found"}
+var invalidPaths = []string{"favicon.ico"}
+
+func IsInvalidPath(path string) bool {
+	return ContainsSubstring(invalidPaths, path)
+}
 
 func GenerateSlug(length int) string {
 	result, err := nanoid.GenerateString(defaultAlphabet, length)

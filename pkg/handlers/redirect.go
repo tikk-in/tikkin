@@ -7,6 +7,7 @@ import (
 	"strings"
 	"tikkin/pkg/model"
 	"tikkin/pkg/repository"
+	tikkin_utils "tikkin/pkg/utils"
 )
 
 type RedirectHandler struct {
@@ -41,6 +42,10 @@ func (r *RedirectHandler) handleVisit(link *model.Link, headers map[string][]str
 
 // HandleRedirect handles link redirection
 func (r *RedirectHandler) HandleRedirect(c *fiber.Ctx) error {
+
+	if tikkin_utils.IsInvalidPath(c.Path()) {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
 
 	slug := utils.CopyString(c.Params("slug"))
 

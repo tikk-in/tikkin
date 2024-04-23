@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"tikkin/pkg/db"
 	"tikkin/pkg/model"
+	"tikkin/pkg/repository/queries"
 )
 
 type UsersRepository struct {
@@ -17,14 +18,16 @@ func NewUsersRepository(db *db.DB) UsersRepository {
 }
 
 func (u *UsersRepository) FindUserByVerificationToken(token string) (*model.User, error) {
-	row := u.db.Pool.QueryRow(context.Background(), "SELECT id, email, password, verified, verification_token, created_at, updated_at FROM users WHERE verification_token = $1", token)
-
-	user := model.User{}
-	err := row.Scan(&user.ID, &user.Email, &user.Password, &user.Verified, &user.VerificationToken, &user.CreatedAt, &user.UpdatedAt)
+	if token == "" {
+		return nil, errors.New("token.empty")
+	}
+	user, err := u.db.Queries.FindUserByVerificationToken(context.Background(), &token)
 	if err != nil {
 		return nil, err
 	}
-	return &user, nil
+
+	pUser := model.User(user)
+	return &pUser, nil
 }
 
 func (u *UsersRepository) MarkUserAsVerified(user *model.User) (*model.User, error) {
@@ -35,48 +38,46 @@ func (u *UsersRepository) MarkUserAsVerified(user *model.User) (*model.User, err
 		return nil, errors.New("user.not.found")
 	}
 
-	res, err := u.db.Pool.Exec(context.Background(), "UPDATE users SET verified = $1, verification_token = null WHERE id = $2", true, user.ID)
+	updatedUser, err := u.db.Queries.MarkUserAsVerified(context.Background(), user.ID)
 	if err != nil {
 		return nil, err
 	}
-	if res.RowsAffected() == 0 {
-		return nil, errors.New("user.not.found")
-	}
-
-	return u.FindUserByID(user.ID)
+	pUser := model.User(updatedUser)
+	return &pUser, nil
 }
 
 func (u *UsersRepository) FindUserByID(id int64) (*model.User, error) {
-	row := u.db.Pool.QueryRow(context.Background(), "SELECT id, email, password, verified, created_at, updated_at FROM users WHERE id = $1", id)
 
-	user := model.User{}
-	err := row.Scan(&user.ID, &user.Email, &user.Password, &user.Verified, &user.CreatedAt, &user.UpdatedAt)
+	user, err := u.db.Queries.FindUserByID(context.Background(), id)
 	if err != nil {
 		return nil, err
 	}
-	return &user, nil
+
+	cUser := model.User(user)
+	return &cUser, nil
 }
 
 func (u *UsersRepository) CreateUser(user model.User) (*model.User, error) {
 
-	if user.VerificationToken == "" {
+	if user.VerificationToken == nil || *user.VerificationToken == "" {
 		verificationToken, err := uuid.NewRandom()
 		if err != nil {
 			return nil, err
 		}
-		user.VerificationToken = verificationToken.String()
+		tokenStr := verificationToken.String()
+		user.VerificationToken = &tokenStr
 	}
 
-	row := u.db.Pool.QueryRow(context.Background(), "INSERT INTO users (email, password, verified, verification_token) VALUES ($1, $2, $3, $4) RETURNING id, email, password, verified, verification_token, created_at, updated_at",
-		user.Email, user.Password, user.Verified, user.VerificationToken)
-
-	createdUser := model.User{}
-	err := row.Scan(&createdUser.ID, &createdUser.Email, &createdUser.Password,
-		&createdUser.Verified, &createdUser.VerificationToken,
-		&createdUser.CreatedAt, &createdUser.UpdatedAt)
+	result, err := u.db.Queries.CreateUser(context.Background(), queries.CreateUserParams{
+		Email:             user.Email,
+		Password:          user.Password,
+		Verified:          user.Verified,
+		VerificationToken: user.VerificationToken,
+	})
 	if err != nil {
 		return nil, err
 	}
 
+	createdUser := model.User(result)
 	return &createdUser, nil
 }

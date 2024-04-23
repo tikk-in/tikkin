@@ -6,11 +6,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 	"tikkin/pkg/config"
+	"tikkin/pkg/repository/queries"
 )
 
 type DB struct {
-	Config *pgxpool.Config
-	Pool   *pgxpool.Pool
+	Config  *pgxpool.Config
+	Pool    *pgxpool.Pool
+	Queries *queries.Queries
 }
 
 func NewDB(cfg config.Config) *DB {
@@ -30,7 +32,8 @@ func NewDB(cfg config.Config) *DB {
 	}
 
 	return &DB{
-		Config: dbConfig,
-		Pool:   pool,
+		Config:  dbConfig,
+		Pool:    pool,
+		Queries: queries.New(pool),
 	}
 }

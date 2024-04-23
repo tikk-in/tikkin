@@ -169,7 +169,7 @@ func (l *LinkHandler) HandleDeleteLink(ctx *fiber.Ctx) error {
 		})
 	}
 
-	link, err := l.repository.GetLink(linkId)
+	link, err := l.repository.GetLinkByID(linkId)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to get link",
@@ -216,7 +216,7 @@ func (l *LinkHandler) HandleGetLinks(ctx *fiber.Ctx) error {
 		})
 	}
 
-	links, err := l.repository.GetUserLinks(int64(userId), page)
+	links, err := l.repository.GetUserLinks(int64(userId), int32(page))
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to get links",
@@ -232,8 +232,8 @@ func (l *LinkHandler) HandleGetLinks(ctx *fiber.Ctx) error {
 			Slug:        link.Slug,
 			Description: link.Description,
 			TargetUrl:   link.TargetUrl,
-			CreatedAt:   link.CreatedAt,
-			UpdatedAt:   link.UpdatedAt,
+			CreatedAt:   &link.CreatedAt,
+			UpdatedAt:   &link.UpdatedAt,
 			ExpireAt:    link.ExpireAt,
 			Visits:      visits,
 		}
