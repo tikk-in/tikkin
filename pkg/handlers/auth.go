@@ -26,6 +26,15 @@ func NewLoginHandler(cfg *config.Config, db *db.DB, userHandler UserHandler) *Au
 	return &AuthHandler{Config: cfg, db: db, UserHandler: userHandler}
 }
 
+// HandleLogin login
+// @Summary Login
+// @Description login endpoint
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param login body Login true "login"
+// @Success 200 {object} handlers.Login
+// @Router /api/v1/auth/login [post]
 func (l *AuthHandler) HandleLogin(c *fiber.Ctx) error {
 	login := new(Login)
 	err := c.BodyParser(login)
@@ -66,6 +75,15 @@ func (l *AuthHandler) HandleLogin(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"token": t})
 }
 
+// HandleRegister register
+// @Summary Registers a new user
+// @Description Register a new user
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param login body Login true "login"
+// @Success 201
+// @Router /api/v1/auth/signup [post]
 func (l *AuthHandler) HandleRegister(c *fiber.Ctx) error {
 	login := new(Login)
 	err := c.BodyParser(login)

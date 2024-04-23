@@ -15,10 +15,9 @@ type RedirectHandler struct {
 	visitsRepository repository.VisitsRepository
 }
 
-func NewRedirectHandler(linkHandler LinkHandler) RedirectHandler {
-	repo := repository.NewLinksRepository(linkHandler.db)
+func NewRedirectHandler(linkHandler LinkHandler, linksRepository repository.LinksRepository) RedirectHandler {
 	visitsRepository := repository.NewVisitsRepository(linkHandler.db)
-	return RedirectHandler{LinkHandler: &linkHandler, repository: repo, visitsRepository: visitsRepository}
+	return RedirectHandler{LinkHandler: &linkHandler, repository: linksRepository, visitsRepository: visitsRepository}
 }
 
 func (r *RedirectHandler) handleVisit(link *model.Link, headers map[string][]string, realIP string) {
@@ -40,6 +39,7 @@ func (r *RedirectHandler) handleVisit(link *model.Link, headers map[string][]str
 	r.visitsRepository.InsertVisit(visit)
 }
 
+// HandleRedirect handles link redirection
 func (r *RedirectHandler) HandleRedirect(c *fiber.Ctx) error {
 
 	slug := utils.CopyString(c.Params("slug"))
