@@ -80,21 +80,26 @@ func (l *LinkHandler) HandleCreateLink(c *fiber.Ctx) error {
 	return c.JSON(link)
 }
 
-func (l *LinkHandler) HandleUpdateLink(ctx *fiber.Ctx) error {
-	return ctx.SendString("Update link")
-}
-
-// HandleDeleteLink deletes a link
-// @Summary Delete a link
-// @Description Delete a link
+// HandleUpdateLink updates a link
+// @Summary Update a link
+// @Description Update a link
 // @Tags links
 // @Accept json
 // @Produce json
 // @Param id path int true "Link ID"
-// @Success 200
-// @Router /api/v1/links/{id} [delete]
-// @Security ApiKeyAuth
-func (l *LinkHandler) HandleDeleteLink(ctx *fiber.Ctx) error {
+// @Param link body model.Link true "Link"
+// @Router /api/v1/links/{id} [put]
+// @Success 200 {object} model.Link
+func (l *LinkHandler) HandleUpdateLink(ctx *fiber.Ctx) error {
+
+	user := ctx.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	userId := claims["user_id"].(float64)
+	if userId == 0 {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "unauthorized",
+		})
+	}
 
 	linkIdStr := ctx.Params("id")
 	if linkIdStr == "" {
@@ -110,12 +115,57 @@ func (l *LinkHandler) HandleDeleteLink(ctx *fiber.Ctx) error {
 		})
 	}
 
+	body := new(model.Link)
+	if err := ctx.BodyParser(body); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Cannot parse JSON",
+		})
+	}
+
+	body.UserId = int64(userId)
+
+	link, err := l.repository.UpdateLink(linkId, *body)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to update link",
+		})
+	}
+
+	return ctx.JSON(link)
+}
+
+// HandleDeleteLink deletes a link
+// @Summary Delete a link
+// @Description Delete a link
+// @Tags links
+// @Accept json
+// @Produce json
+// @Param id path int true "Link ID"
+// @Success 200
+// @Router /api/v1/links/{id} [delete]
+// @Security ApiKeyAuth
+func (l *LinkHandler) HandleDeleteLink(ctx *fiber.Ctx) error {
+
 	user := ctx.Locals("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	userId := claims["user_id"].(float64)
 	if userId == 0 {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "unauthorized",
+		})
+	}
+
+	linkIdStr := ctx.Params("id")
+	if linkIdStr == "" {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "id_required",
+		})
+	}
+
+	linkId, err := strconv.ParseInt(linkIdStr, 10, 64)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "id_invalid",
 		})
 	}
 

@@ -166,6 +166,32 @@ paths:
       summary: Delete a link
       tags:
       - links
+    put:
+      consumes:
+      - application/json
+      description: Update a link
+      parameters:
+      - description: Link ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Link
+        in: body
+        name: link
+        required: true
+        schema:
+          $ref: '#/definitions/model.Link'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Link'
+      summary: Update a link
+      tags:
+      - links
   /api/v1/users/verify/{token}:
     get:
       consumes:
