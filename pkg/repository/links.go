@@ -36,8 +36,8 @@ func (l *LinksRepository) GetUserLinks(userId int64, page int32) ([]model.Link, 
 
 	params := queries.GetUserLinksParams{
 		Userid:      userId,
-		Queryoffset: 20,
-		Maxresults:  page * 20,
+		Maxresults:  20,
+		Queryoffset: page * 20,
 	}
 
 	results, err := l.db.Queries(context.Background()).GetUserLinks(context.Background(), params)
