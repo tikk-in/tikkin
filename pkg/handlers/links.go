@@ -39,7 +39,8 @@ func validateNewLink(link *model.Link) error {
 	if link.ExpireAt != nil && link.ExpireAt.Before(time.Now()) {
 		return fiber.NewError(fiber.StatusBadRequest, "expire_at_invalid")
 	}
-	// validate valid URL
+
+	// validate URL
 	_, err := url.ParseRequestURI(link.TargetUrl)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "target_url_invalid")
