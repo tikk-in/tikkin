@@ -58,6 +58,43 @@ func (q *Queries) DeleteLinkByID(ctx context.Context, id int64) error {
 	return err
 }
 
+const getExpiredLinks = `-- name: GetExpiredLinks :many
+SELECT id, user_id, slug, description, banned, expire_at, target_url, created_at, updated_at
+FROM links
+WHERE expire_at < NOW()
+LIMIT $1 FOR UPDATE SKIP LOCKED
+`
+
+func (q *Queries) GetExpiredLinks(ctx context.Context, maxresults int32) ([]Link, error) {
+	rows, err := q.db.Query(ctx, getExpiredLinks, maxresults)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Link
+	for rows.Next() {
+		var i Link
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Slug,
+			&i.Description,
+			&i.Banned,
+			&i.ExpireAt,
+			&i.TargetUrl,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getLinkByID = `-- name: GetLinkByID :one
 SELECT id, user_id, slug, description, banned, expire_at, target_url, created_at, updated_at
 FROM links

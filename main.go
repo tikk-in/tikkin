@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/ansrivas/fiberprometheus/v2"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
@@ -62,7 +63,13 @@ func main() {
 	linkHandler := handlers.NewLinkHandler(db, cfg, linksRepository)
 	redirectHandler := handlers.NewRedirectHandler(linkHandler, linksRepository)
 
+	metricsApp := fiber.New(fiber.Config{})
+	prometheus := fiberprometheus.New("tikkin")
+	prometheus.RegisterAt(metricsApp, "/metrics")
+	go metricsApp.Listen(":3001")
+
 	app := fiber.New()
+	app.Use(prometheus.Middleware)
 
 	if cfg.Docs.Enabled {
 		enableDocs(app, cfg)
@@ -85,6 +92,11 @@ func main() {
 	app.Put("/api/v1/links/:id", linkHandler.HandleUpdateLink)
 	app.Delete("/api/v1/links/:id", linkHandler.HandleDeleteLink)
 	app.Get("/api/v1/links", linkHandler.HandleGetLinks)
+
+	if cfg.Links.DeleteExpired {
+		expirationHandler := handlers.NewExpirationHandler(db, cfg, linksRepository)
+		go expirationHandler.ExpirationLoop()
+	}
 
 	app.Listen(":" + strconv.Itoa(cfg.Server.Port))
 }

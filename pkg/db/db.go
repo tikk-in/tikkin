@@ -2,7 +2,9 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 	"tikkin/pkg/config"
@@ -10,9 +12,9 @@ import (
 )
 
 type DB struct {
-	Config  *pgxpool.Config
-	Pool    *pgxpool.Pool
-	Queries *queries.Queries
+	Config     *pgxpool.Config
+	Pool       *pgxpool.Pool
+	rawQueries *queries.Queries
 }
 
 func NewDB(cfg config.Config) *DB {
@@ -32,8 +34,35 @@ func NewDB(cfg config.Config) *DB {
 	}
 
 	return &DB{
-		Config:  dbConfig,
-		Pool:    pool,
-		Queries: queries.New(pool),
+		Config:     dbConfig,
+		Pool:       pool,
+		rawQueries: queries.New(pool),
 	}
+}
+
+func (db *DB) Queries(ctx context.Context) *queries.Queries {
+	if ctx.Value("tx") != nil {
+		return queries.New(db.Pool).WithTx(ctx.Value("tx").(pgx.Tx))
+	}
+	return db.rawQueries
+}
+
+func (db *DB) WithTx(ctx context.Context, fn func(context.Context) error) error {
+
+	if ctx.Value("tx") != nil {
+		return errors.New("transaction already in progress")
+	}
+	tx, err := db.Pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+
+	context.WithValue(ctx, "tx", tx)
+	defer tx.Rollback(ctx)
+
+	if err := fn(ctx); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }

@@ -33,3 +33,9 @@ RETURNING *;
 DELETE
 FROM links
 WHERE id = $1;
+
+-- name: GetExpiredLinks :many
+SELECT *
+FROM links
+WHERE expire_at < NOW()
+LIMIT @maxResults FOR UPDATE SKIP LOCKED;

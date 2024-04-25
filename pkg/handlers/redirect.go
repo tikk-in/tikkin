@@ -8,6 +8,7 @@ import (
 	"tikkin/pkg/model"
 	"tikkin/pkg/repository"
 	tikkin_utils "tikkin/pkg/utils"
+	"time"
 )
 
 type RedirectHandler struct {
@@ -55,6 +56,11 @@ func (r *RedirectHandler) HandleRedirect(c *fiber.Ctx) error {
 	if err != nil || targetLink == nil {
 		return c.Redirect("/not_found")
 	}
+
+	if targetLink.ExpireAt != nil && targetLink.ExpireAt.Before(time.Now()) {
+		return c.Redirect("/not_found")
+	}
+
 	go r.handleVisit(targetLink, headers, realIP)
 	return c.Redirect(targetLink.TargetUrl)
 }
