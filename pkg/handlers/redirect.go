@@ -7,19 +7,17 @@ import (
 	"strings"
 	"tikkin/pkg/model"
 	"tikkin/pkg/repository"
-	tikkin_utils "tikkin/pkg/utils"
+	tikkinutils "tikkin/pkg/utils"
 	"time"
 )
 
 type RedirectHandler struct {
-	LinkHandler      *LinkHandler
-	repository       repository.LinksRepository
-	visitsRepository repository.VisitsRepository
+	LinkHandler *LinkHandler
+	repository  repository.Repository
 }
 
-func NewRedirectHandler(linkHandler LinkHandler, linksRepository repository.LinksRepository) RedirectHandler {
-	visitsRepository := repository.NewVisitsRepository(linkHandler.db)
-	return RedirectHandler{LinkHandler: &linkHandler, repository: linksRepository, visitsRepository: visitsRepository}
+func NewRedirectHandler(linkHandler LinkHandler, repository repository.Repository) RedirectHandler {
+	return RedirectHandler{LinkHandler: &linkHandler, repository: repository}
 }
 
 func (r *RedirectHandler) handleVisit(link *model.Link, headers map[string][]string, realIP string) {
@@ -38,13 +36,13 @@ func (r *RedirectHandler) handleVisit(link *model.Link, headers map[string][]str
 		CountryCode: nil,
 	}
 
-	r.visitsRepository.InsertVisit(visit)
+	r.repository.InsertVisit(visit)
 }
 
 // HandleRedirect handles link redirection
 func (r *RedirectHandler) HandleRedirect(c *fiber.Ctx) error {
 
-	if tikkin_utils.IsInvalidPath(c.Path()) {
+	if tikkinutils.IsInvalidPath(c.Path()) {
 		return c.SendStatus(fiber.StatusNotFound)
 	}
 
@@ -66,7 +64,7 @@ func (r *RedirectHandler) HandleRedirect(c *fiber.Ctx) error {
 }
 
 func (r *RedirectHandler) getLinkBySlug(slug string) string {
-	link, err := r.LinkHandler.repository.GetLinkBySlug(slug)
+	link, err := r.repository.GetLinkBySlug(slug)
 	if err != nil || link == nil {
 		return "not_found"
 	}

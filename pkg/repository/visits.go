@@ -3,22 +3,13 @@ package repository
 import (
 	"context"
 	"github.com/rs/zerolog/log"
-	"tikkin/pkg/db"
 	"tikkin/pkg/model"
 	"tikkin/pkg/repository/queries"
 )
 
-type VisitsRepository struct {
-	db *db.DB
-}
+func (r *Repository) InsertVisit(visit model.Visits) {
 
-func NewVisitsRepository(db *db.DB) VisitsRepository {
-	return VisitsRepository{db: db}
-}
-
-func (l *VisitsRepository) InsertVisit(visit model.Visits) {
-
-	_, err := l.db.Queries(context.Background()).InsertVisit(context.Background(), queries.InsertVisitParams{
+	_, err := r.db.Queries(context.Background()).InsertVisit(context.Background(), queries.InsertVisitParams{
 		ID:          visit.ID,
 		LinkID:      visit.LinkID,
 		UserAgent:   visit.UserAgent,
@@ -32,8 +23,8 @@ func (l *VisitsRepository) InsertVisit(visit model.Visits) {
 	}
 }
 
-func (l *VisitsRepository) CountVisits(link model.Link) int64 {
-	count, err := l.db.Queries(context.Background()).CountVisitsByLinkID(context.Background(), link.ID)
+func (r *Repository) CountVisits(link model.Link) int64 {
+	count, err := r.db.Queries(context.Background()).CountVisitsByLinkID(context.Background(), link.ID)
 	if err != nil {
 		log.Err(err).Msg("Failed to count visits")
 		return 0

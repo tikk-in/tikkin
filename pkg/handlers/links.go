@@ -16,15 +16,13 @@ import (
 )
 
 type LinkHandler struct {
-	db               *db.DB
-	Config           *config.Config
-	repository       *repository.LinksRepository
-	visitsRepository *repository.VisitsRepository
+	db         *db.DB
+	Config     *config.Config
+	repository *repository.Repository
 }
 
-func NewLinkHandler(db *db.DB, config *config.Config, linksRepository repository.LinksRepository) LinkHandler {
-	visitRepo := repository.NewVisitsRepository(db)
-	return LinkHandler{db: db, Config: config, repository: &linksRepository, visitsRepository: &visitRepo}
+func NewLinkHandler(db *db.DB, config *config.Config, repository repository.Repository) LinkHandler {
+	return LinkHandler{db: db, Config: config, repository: &repository}
 }
 
 func validateNewLink(link *model.Link) error {
@@ -261,7 +259,7 @@ func (l *LinkHandler) HandleGetLinks(ctx *fiber.Ctx) error {
 	dtos := make([]dto.LinkDTO, len(links))
 	for i, link := range links {
 
-		visits := l.visitsRepository.CountVisits(link)
+		visits := l.repository.CountVisits(link)
 		dtos[i] = dto.LinkDTO{
 			ID:          link.ID,
 			Slug:        link.Slug,

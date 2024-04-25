@@ -4,24 +4,19 @@ import (
 	"context"
 	"errors"
 	"github.com/google/uuid"
-	"tikkin/pkg/db"
 	"tikkin/pkg/model"
 	"tikkin/pkg/repository/queries"
 )
 
-type UsersRepository struct {
-	db *db.DB
+type UserRepository interface {
+	FindUserByVerificationToken(token string) (*model.User, error)
 }
 
-func NewUsersRepository(db *db.DB) UsersRepository {
-	return UsersRepository{db: db}
-}
-
-func (u *UsersRepository) FindUserByVerificationToken(token string) (*model.User, error) {
+func (r *Repository) FindUserByVerificationToken(token string) (*model.User, error) {
 	if token == "" {
 		return nil, errors.New("token.empty")
 	}
-	user, err := u.db.Queries(context.Background()).FindUserByVerificationToken(context.Background(), &token)
+	user, err := r.db.Queries(context.Background()).FindUserByVerificationToken(context.Background(), &token)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +25,7 @@ func (u *UsersRepository) FindUserByVerificationToken(token string) (*model.User
 	return &pUser, nil
 }
 
-func (u *UsersRepository) MarkUserAsVerified(user *model.User) (*model.User, error) {
+func (r *Repository) MarkUserAsVerified(user *model.User) (*model.User, error) {
 	if user.Verified {
 		return user, nil
 	}
@@ -38,7 +33,7 @@ func (u *UsersRepository) MarkUserAsVerified(user *model.User) (*model.User, err
 		return nil, errors.New("user.not.found")
 	}
 
-	updatedUser, err := u.db.Queries(context.Background()).MarkUserAsVerified(context.Background(), user.ID)
+	updatedUser, err := r.db.Queries(context.Background()).MarkUserAsVerified(context.Background(), user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -46,9 +41,9 @@ func (u *UsersRepository) MarkUserAsVerified(user *model.User) (*model.User, err
 	return &pUser, nil
 }
 
-func (u *UsersRepository) FindUserByID(id int64) (*model.User, error) {
+func (r *Repository) FindUserByID(id int64) (*model.User, error) {
 
-	user, err := u.db.Queries(context.Background()).FindUserByID(context.Background(), id)
+	user, err := r.db.Queries(context.Background()).FindUserByID(context.Background(), id)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +52,7 @@ func (u *UsersRepository) FindUserByID(id int64) (*model.User, error) {
 	return &cUser, nil
 }
 
-func (u *UsersRepository) CreateUser(user model.User) (*model.User, error) {
+func (r *Repository) CreateUser(user model.User) (*model.User, error) {
 
 	if user.VerificationToken == nil || *user.VerificationToken == "" {
 		verificationToken, err := uuid.NewRandom()
@@ -68,7 +63,7 @@ func (u *UsersRepository) CreateUser(user model.User) (*model.User, error) {
 		user.VerificationToken = &tokenStr
 	}
 
-	result, err := u.db.Queries(context.Background()).CreateUser(context.Background(),
+	result, err := r.db.Queries(context.Background()).CreateUser(context.Background(),
 		queries.CreateUserParams{
 			Email:             user.Email,
 			Password:          user.Password,

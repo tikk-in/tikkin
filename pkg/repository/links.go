@@ -5,25 +5,14 @@ import (
 	"errors"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
-	"tikkin/pkg/config"
-	"tikkin/pkg/db"
 	"tikkin/pkg/model"
 	"tikkin/pkg/repository/queries"
 	"tikkin/pkg/utils"
 )
 
-type LinksRepository struct {
-	db     *db.DB
-	config *config.Config
-}
+func (r *Repository) GetLinkByID(id int64) (*model.Link, error) {
 
-func NewLinksRepository(db *db.DB, config *config.Config) LinksRepository {
-	return LinksRepository{db: db, config: config}
-}
-
-func (l *LinksRepository) GetLinkByID(id int64) (*model.Link, error) {
-
-	linkEntity, err := l.db.Queries(context.Background()).GetLinkByID(context.Background(), id)
+	linkEntity, err := r.db.Queries(context.Background()).GetLinkByID(context.Background(), id)
 	if err != nil {
 		log.Err(err).Msg("Failed to find link")
 		return nil, err
@@ -32,7 +21,7 @@ func (l *LinksRepository) GetLinkByID(id int64) (*model.Link, error) {
 	return linkEntity.ToModel(), nil
 }
 
-func (l *LinksRepository) GetUserLinks(userId int64, page int32) ([]model.Link, error) {
+func (r *Repository) GetUserLinks(userId int64, page int32) ([]model.Link, error) {
 
 	params := queries.GetUserLinksParams{
 		Userid:      userId,
@@ -40,7 +29,7 @@ func (l *LinksRepository) GetUserLinks(userId int64, page int32) ([]model.Link, 
 		Queryoffset: page * 20,
 	}
 
-	results, err := l.db.Queries(context.Background()).GetUserLinks(context.Background(), params)
+	results, err := r.db.Queries(context.Background()).GetUserLinks(context.Background(), params)
 	if err != nil {
 		log.Err(err).Msg("Failed to find user links")
 		return nil, err
@@ -54,8 +43,8 @@ func (l *LinksRepository) GetUserLinks(userId int64, page int32) ([]model.Link, 
 	return links, nil
 }
 
-func (l *LinksRepository) GetLinkBySlug(slug string) (*model.Link, error) {
-	link, err := l.db.Queries(context.Background()).GetLinkBySlug(context.Background(), slug)
+func (r *Repository) GetLinkBySlug(slug string) (*model.Link, error) {
+	link, err := r.db.Queries(context.Background()).GetLinkBySlug(context.Background(), slug)
 	if err != nil {
 		if err.Error() == pgx.ErrNoRows.Error() {
 			return nil, nil
@@ -66,7 +55,7 @@ func (l *LinksRepository) GetLinkBySlug(slug string) (*model.Link, error) {
 	return link.ToModel(), nil
 }
 
-func (l *LinksRepository) CreateLink(link model.Link) (*model.Link, error) {
+func (r *Repository) CreateLink(link model.Link) (*model.Link, error) {
 	// Create a new link
 	log.Info().
 		Str("slug", link.Slug).
@@ -76,7 +65,7 @@ func (l *LinksRepository) CreateLink(link model.Link) (*model.Link, error) {
 		Msg("Creating link")
 
 	if link.Slug == "" {
-		link.Slug = utils.GenerateSlug(l.config.Links.Length)
+		link.Slug = utils.GenerateSlug(r.config.Links.Length)
 	}
 
 	if utils.Contains(utils.BlockedSlugs, link.Slug) {
@@ -84,7 +73,7 @@ func (l *LinksRepository) CreateLink(link model.Link) (*model.Link, error) {
 		return nil, errors.New("slug_denied")
 	}
 
-	res, err := l.db.Queries(context.Background()).CreateLink(context.Background(),
+	res, err := r.db.Queries(context.Background()).CreateLink(context.Background(),
 		queries.CreateLinkParams{
 			UserID:      link.UserId,
 			Slug:        link.Slug,
@@ -101,9 +90,9 @@ func (l *LinksRepository) CreateLink(link model.Link) (*model.Link, error) {
 	return res.ToModel(), nil
 }
 
-func (l *LinksRepository) DeleteLink(ctx context.Context, id int64) error {
+func (r *Repository) DeleteLink(ctx context.Context, id int64) error {
 	log.Info().Int64("id", id).Msg("Deleting link")
-	err := l.db.Queries(ctx).DeleteLinkByID(context.Background(), id)
+	err := r.db.Queries(ctx).DeleteLinkByID(context.Background(), id)
 	if err != nil {
 		log.Err(err).Msg("Failed to delete link")
 		return err
@@ -113,9 +102,9 @@ func (l *LinksRepository) DeleteLink(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (l *LinksRepository) UpdateLink(id int64, link model.Link) (*model.Link, error) {
+func (r *Repository) UpdateLink(id int64, link model.Link) (*model.Link, error) {
 
-	updatedLink, err := l.db.Queries(context.Background()).UpdateLink(context.Background(), queries.UpdateLinkParams{
+	updatedLink, err := r.db.Queries(context.Background()).UpdateLink(context.Background(), queries.UpdateLinkParams{
 		ID:          id,
 		UserID:      link.UserId,
 		Description: &link.Description,
@@ -130,8 +119,8 @@ func (l *LinksRepository) UpdateLink(id int64, link model.Link) (*model.Link, er
 	return updatedLink.ToModel(), nil
 }
 
-func (l *LinksRepository) GetExpiredLinks(ctx context.Context) ([]model.Link, error) {
-	result, err := l.db.Queries(ctx).GetExpiredLinks(context.Background(), 10)
+func (r *Repository) GetExpiredLinks(ctx context.Context) ([]model.Link, error) {
+	result, err := r.db.Queries(ctx).GetExpiredLinks(ctx, 10)
 	if err != nil {
 		log.Err(err).Msg("Failed to get expired links")
 		return nil, err
