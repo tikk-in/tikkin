@@ -39,7 +39,7 @@ func (e *ExpirationHandler) deleteLinksBatch() error {
 			return NoLinksToExpireErr
 		}
 		for _, link := range links {
-			err = e.linkRepository.DeleteLinkTx(ctx, link.ID)
+			err = e.linkRepository.DeleteLink(ctx, link.ID)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to delete expired link. Continuing...")
 			}

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/zerolog/log"
@@ -216,7 +217,7 @@ func (l *LinkHandler) HandleDeleteLink(ctx *fiber.Ctx) error {
 		})
 	}
 
-	err = l.repository.DeleteLink(linkId)
+	err = l.repository.DeleteLink(context.Background(), linkId)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to delete link",

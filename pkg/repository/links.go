@@ -101,9 +101,9 @@ func (l *LinksRepository) CreateLink(link model.Link) (*model.Link, error) {
 	return res.ToModel(), nil
 }
 
-func (l *LinksRepository) DeleteLink(id int64) error {
+func (l *LinksRepository) DeleteLink(ctx context.Context, id int64) error {
 	log.Info().Int64("id", id).Msg("Deleting link")
-	err := l.db.Queries(context.Background()).DeleteLinkByID(context.Background(), id)
+	err := l.db.Queries(ctx).DeleteLinkByID(context.Background(), id)
 	if err != nil {
 		log.Err(err).Msg("Failed to delete link")
 		return err
