@@ -4,12 +4,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/zerolog/log"
+	"net/url"
 	"strconv"
 	"tikkin/pkg/config"
 	"tikkin/pkg/db"
 	"tikkin/pkg/dto"
 	"tikkin/pkg/model"
 	"tikkin/pkg/repository"
+	"time"
 )
 
 type LinkHandler struct {
@@ -22,6 +24,31 @@ type LinkHandler struct {
 func NewLinkHandler(db *db.DB, config *config.Config, linksRepository repository.LinksRepository) LinkHandler {
 	visitRepo := repository.NewVisitsRepository(db)
 	return LinkHandler{db: db, Config: config, repository: &linksRepository, visitsRepository: &visitRepo}
+}
+
+func validateNewLink(link *model.Link) error {
+	if len(link.Description) > 1000 {
+		return fiber.NewError(fiber.StatusBadRequest, "description_too_long")
+	}
+	if len(link.Slug) > 25 {
+		return fiber.NewError(fiber.StatusBadRequest, "slug_too_long")
+	}
+	if len(link.TargetUrl) > 1000 {
+		return fiber.NewError(fiber.StatusBadRequest, "target_url_too_long")
+	}
+	if link.ExpireAt != nil && link.ExpireAt.Before(time.Now()) {
+		return fiber.NewError(fiber.StatusBadRequest, "expire_at_invalid")
+	}
+	// validate valid URL
+	_, err := url.ParseRequestURI(link.TargetUrl)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "target_url_invalid")
+	}
+	u, err := url.Parse(link.TargetUrl)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "target_url_invalid")
+	}
+	return nil
 }
 
 // HandleCreateLink creates a new link
@@ -43,9 +70,9 @@ func (l *LinkHandler) HandleCreateLink(c *fiber.Ctx) error {
 		})
 	}
 
-	if len(link.Description) > 1000 {
+	if err := validateNewLink(link); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "description_too_long",
+			"error": err.Error(),
 		})
 	}
 
@@ -119,6 +146,12 @@ func (l *LinkHandler) HandleUpdateLink(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(body); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Cannot parse JSON",
+		})
+	}
+
+	if err := validateNewLink(body); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
 		})
 	}
 

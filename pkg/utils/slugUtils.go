@@ -7,8 +7,8 @@ import (
 
 const defaultAlphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
-var BlockedSlugs = []string{"admin", "api", "auth", "login", "logout", "register", "links", "users", "not_found"}
-var invalidPaths = []string{"favicon.ico"}
+var BlockedSlugs = []string{"admin", "api", "auth", "login", "logout", "register", "links", "users", "not_found", "expired"}
+var invalidPaths = []string{"favicon.ico", "not_found", "expired"}
 
 func IsInvalidPath(path string) bool {
 	return ContainsSubstring(invalidPaths, path)

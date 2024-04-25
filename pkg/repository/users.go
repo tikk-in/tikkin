@@ -21,7 +21,7 @@ func (u *UsersRepository) FindUserByVerificationToken(token string) (*model.User
 	if token == "" {
 		return nil, errors.New("token.empty")
 	}
-	user, err := u.db.Queries.FindUserByVerificationToken(context.Background(), &token)
+	user, err := u.db.Queries(context.Background()).FindUserByVerificationToken(context.Background(), &token)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (u *UsersRepository) MarkUserAsVerified(user *model.User) (*model.User, err
 		return nil, errors.New("user.not.found")
 	}
 
-	updatedUser, err := u.db.Queries.MarkUserAsVerified(context.Background(), user.ID)
+	updatedUser, err := u.db.Queries(context.Background()).MarkUserAsVerified(context.Background(), user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (u *UsersRepository) MarkUserAsVerified(user *model.User) (*model.User, err
 
 func (u *UsersRepository) FindUserByID(id int64) (*model.User, error) {
 
-	user, err := u.db.Queries.FindUserByID(context.Background(), id)
+	user, err := u.db.Queries(context.Background()).FindUserByID(context.Background(), id)
 	if err != nil {
 		return nil, err
 	}
@@ -68,12 +68,13 @@ func (u *UsersRepository) CreateUser(user model.User) (*model.User, error) {
 		user.VerificationToken = &tokenStr
 	}
 
-	result, err := u.db.Queries.CreateUser(context.Background(), queries.CreateUserParams{
-		Email:             user.Email,
-		Password:          user.Password,
-		Verified:          user.Verified,
-		VerificationToken: user.VerificationToken,
-	})
+	result, err := u.db.Queries(context.Background()).CreateUser(context.Background(),
+		queries.CreateUserParams{
+			Email:             user.Email,
+			Password:          user.Password,
+			Verified:          user.Verified,
+			VerificationToken: user.VerificationToken,
+		})
 	if err != nil {
 		return nil, err
 	}

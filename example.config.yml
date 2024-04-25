@@ -28,6 +28,7 @@ admin:
 
 links:
   length: 6
+  deleteExpired: false
 
 docs:
   enabled: true

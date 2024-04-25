@@ -24,7 +24,8 @@ type DatabaseConfig struct {
 }
 
 type LinksConfig struct {
-	Length int `yaml:"length"`
+	Length        int  `yaml:"length"`
+	DeleteExpired bool `yaml:"deleteExpired"`
 }
 
 type SMTPConfig struct {

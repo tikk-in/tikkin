@@ -23,7 +23,7 @@ func NewLinksRepository(db *db.DB, config *config.Config) LinksRepository {
 
 func (l *LinksRepository) GetLinkByID(id int64) (*model.Link, error) {
 
-	linkEntity, err := l.db.Queries.GetLinkByID(context.Background(), id)
+	linkEntity, err := l.db.Queries(context.Background()).GetLinkByID(context.Background(), id)
 	if err != nil {
 		log.Err(err).Msg("Failed to find link")
 		return nil, err
@@ -40,7 +40,7 @@ func (l *LinksRepository) GetUserLinks(userId int64, page int32) ([]model.Link, 
 		Maxresults:  page * 20,
 	}
 
-	results, err := l.db.Queries.GetUserLinks(context.Background(), params)
+	results, err := l.db.Queries(context.Background()).GetUserLinks(context.Background(), params)
 	if err != nil {
 		log.Err(err).Msg("Failed to find user links")
 		return nil, err
@@ -55,7 +55,7 @@ func (l *LinksRepository) GetUserLinks(userId int64, page int32) ([]model.Link, 
 }
 
 func (l *LinksRepository) GetLinkBySlug(slug string) (*model.Link, error) {
-	link, err := l.db.Queries.GetLinkBySlug(context.Background(), slug)
+	link, err := l.db.Queries(context.Background()).GetLinkBySlug(context.Background(), slug)
 	if err != nil {
 		if err.Error() == pgx.ErrNoRows.Error() {
 			return nil, nil
@@ -72,6 +72,7 @@ func (l *LinksRepository) CreateLink(link model.Link) (*model.Link, error) {
 		Str("slug", link.Slug).
 		Str("description", link.Description).
 		Str("target_url", link.TargetUrl).
+		Time("expire_at", *link.ExpireAt).
 		Msg("Creating link")
 
 	if link.Slug == "" {
@@ -83,12 +84,12 @@ func (l *LinksRepository) CreateLink(link model.Link) (*model.Link, error) {
 		return nil, errors.New("slug_denied")
 	}
 
-	res, err := l.db.Queries.CreateLink(context.Background(),
+	res, err := l.db.Queries(context.Background()).CreateLink(context.Background(),
 		queries.CreateLinkParams{
 			UserID:      link.UserId,
 			Slug:        link.Slug,
 			Description: &link.Description,
-			ExpireAt:    nil,
+			ExpireAt:    link.ExpireAt,
 			TargetUrl:   link.TargetUrl,
 		})
 
@@ -101,19 +102,20 @@ func (l *LinksRepository) CreateLink(link model.Link) (*model.Link, error) {
 }
 
 func (l *LinksRepository) DeleteLink(id int64) error {
-
-	err := l.db.Queries.DeleteLinkByID(context.Background(), id)
+	log.Info().Int64("id", id).Msg("Deleting link")
+	err := l.db.Queries(context.Background()).DeleteLinkByID(context.Background(), id)
 	if err != nil {
 		log.Err(err).Msg("Failed to delete link")
 		return err
 	}
 
+	log.Info().Int64("id", id).Msg("Link deleted")
 	return nil
 }
 
 func (l *LinksRepository) UpdateLink(id int64, link model.Link) (*model.Link, error) {
 
-	updatedLink, err := l.db.Queries.UpdateLink(context.Background(), queries.UpdateLinkParams{
+	updatedLink, err := l.db.Queries(context.Background()).UpdateLink(context.Background(), queries.UpdateLinkParams{
 		ID:          id,
 		UserID:      link.UserId,
 		Description: &link.Description,
@@ -126,4 +128,18 @@ func (l *LinksRepository) UpdateLink(id int64, link model.Link) (*model.Link, er
 	}
 
 	return updatedLink.ToModel(), nil
+}
+
+func (l *LinksRepository) GetExpiredLinks(ctx context.Context) ([]model.Link, error) {
+	result, err := l.db.Queries(ctx).GetExpiredLinks(context.Background(), 10)
+	if err != nil {
+		log.Err(err).Msg("Failed to get expired links")
+		return nil, err
+	}
+
+	var links []model.Link
+	for _, link := range result {
+		links = append(links, *link.ToModel())
+	}
+	return links, nil
 }
