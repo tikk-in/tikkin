@@ -57,12 +57,12 @@ func (db *DB) WithTx(ctx context.Context, fn func(context.Context) error) error 
 		return err
 	}
 
-	context.WithValue(ctx, "tx", tx)
-	defer tx.Rollback(ctx)
+	newCtx := context.WithValue(ctx, "tx", tx)
+	defer tx.Rollback(newCtx)
 
-	if err := fn(ctx); err != nil {
+	if err := fn(newCtx); err != nil {
 		return err
 	}
 
-	return tx.Commit(ctx)
+	return tx.Commit(newCtx)
 }
