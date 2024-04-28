@@ -13,14 +13,14 @@ import (
 type ExpirationHandler struct {
 	db             *db.DB
 	config         *config.Config
-	linkRepository *repository.LinksRepository
+	linkRepository *repository.Repository
 }
 
-func NewExpirationHandler(db *db.DB, config *config.Config, linksRepository repository.LinksRepository) ExpirationHandler {
+func NewExpirationHandler(db *db.DB, config *config.Config, repository repository.Repository) ExpirationHandler {
 	return ExpirationHandler{
 		db:             db,
 		config:         config,
-		linkRepository: &linksRepository,
+		linkRepository: &repository,
 	}
 }
 

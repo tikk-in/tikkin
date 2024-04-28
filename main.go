@@ -56,12 +56,11 @@ func main() {
 	db := db.NewDB(*cfg)
 	admins.EnsureAdmin(cfg, db)
 
-	linksRepository := repository.NewLinksRepository(db, cfg)
-
+	repo := repository.NewRepository(db, cfg)
 	emailHandler := email.NewEmailHandler(cfg)
-	userHandler := handlers.NewUserHandler(db, cfg, &emailHandler)
-	linkHandler := handlers.NewLinkHandler(db, cfg, linksRepository)
-	redirectHandler := handlers.NewRedirectHandler(linkHandler, linksRepository)
+	userHandler := handlers.NewUserHandler(db, cfg, &emailHandler, repo)
+	linkHandler := handlers.NewLinkHandler(db, cfg, repo)
+	redirectHandler := handlers.NewRedirectHandler(linkHandler, repo)
 
 	metricsApp := fiber.New(fiber.Config{})
 	prometheus := fiberprometheus.New("tikkin")
@@ -94,7 +93,7 @@ func main() {
 	app.Get("/api/v1/links", linkHandler.HandleGetLinks)
 
 	if cfg.Links.DeleteExpired {
-		expirationHandler := handlers.NewExpirationHandler(db, cfg, linksRepository)
+		expirationHandler := handlers.NewExpirationHandler(db, cfg, repo)
 		go expirationHandler.ExpirationLoop()
 	}
 

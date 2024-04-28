@@ -58,11 +58,11 @@ func (db *DB) WithTx(ctx context.Context, fn func(context.Context) error) error 
 	}
 
 	newCtx := context.WithValue(ctx, "tx", tx)
-	defer tx.Rollback(newCtx)
+	defer tx.Rollback(ctx)
 
 	if err := fn(newCtx); err != nil {
 		return err
 	}
 
-	return tx.Commit(newCtx)
+	return tx.Commit(ctx)
 }

@@ -14,11 +14,13 @@ type UserHandler struct {
 	db           *db.DB
 	config       *config.Config
 	emailHandler *email.EmailHandler
-	repository   repository.UsersRepository
+	repository   repository.Repository
 }
 
-func NewUserHandler(db *db.DB, config *config.Config, emailHandler *email.EmailHandler) UserHandler {
-	repository := repository.NewUsersRepository(db)
+func NewUserHandler(db *db.DB,
+	config *config.Config,
+	emailHandler *email.EmailHandler,
+	repository repository.Repository) UserHandler {
 	return UserHandler{db: db, config: config, emailHandler: emailHandler, repository: repository}
 }
 
