@@ -8,5 +8,7 @@ RUN go build -o tikkin
 FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /app/tikkin /app/tikkin
+COPY --from=builder /app/docs/swagger.json /app/docs/swagger.json
+COPY --from=builder /app/docs/swagger.yaml /app/docs/swagger.yaml
 
 ENTRYPOINT ["/app/tikkin"]
