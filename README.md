@@ -4,7 +4,7 @@
 
 # Tikk.in
 
-Tikk.in is a simple, headless, lightweight, and blazing fast URL shortener.
+[Tikk.in](tikkin_api_docs) is a simple, headless, lightweight, and blazing fast URL shortener.
 It is built using Go, PostgreSQL, and Redis (optional).
 
 ## Features
@@ -14,6 +14,9 @@ It is built using Go, PostgreSQL, and Redis (optional).
 - **Link Expiry**: You can set an expiry date for the shortened URL.
 - **Custom Alias**: You can set a custom alias for the shortened URL.
 - **Configuration as Code**: Tikk.in can be fully configured using environment variables.
+
+## API
+The API documentation can be found [here](tikkin_api_docs).
 
 ## Installation
 
@@ -76,3 +79,4 @@ Configuration options table:
 
 
 
+[tikkin_address]: [https://tikk.in/api-docs]
