@@ -13,7 +13,6 @@ It is built using Go, PostgreSQL, and Redis (optional).
 - **Lightweight**: Tikk.in is built using Go, which makes it lightweight and fast.
 - **Link Expiry**: You can set an expiry date for the shortened URL.
 - **Custom Alias**: You can set a custom alias for the shortened URL.
-- **Configuration as Code**: Tikk.in can be fully configured using environment variables.
 
 ## API
 The API documentation can be found [here](tikkin_api_docs).
