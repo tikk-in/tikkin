@@ -57,11 +57,16 @@ func (r *Repository) GetLinkBySlug(slug string) (*model.Link, error) {
 
 func (r *Repository) CreateLink(link model.Link) (*model.Link, error) {
 	// Create a new link
+	var expireAt = ""
+	if link.ExpireAt != nil {
+		expireAt = link.ExpireAt.String()
+	}
+
 	log.Info().
 		Str("slug", link.Slug).
 		Str("description", link.Description).
 		Str("target_url", link.TargetUrl).
-		Time("expire_at", *link.ExpireAt).
+		Str("expire_at", expireAt).
 		Msg("Creating link")
 
 	if link.Slug == "" {
