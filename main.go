@@ -4,6 +4,7 @@ import (
 	"github.com/ansrivas/fiberprometheus/v2"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/swagger"
 	"github.com/rs/zerolog/log"
 	"strconv"
@@ -68,6 +69,9 @@ func main() {
 	go metricsApp.Listen(":3001")
 
 	app := fiber.New()
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+	}))
 	app.Use(prometheus.Middleware)
 
 	if cfg.Docs.Enabled {
