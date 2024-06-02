@@ -232,6 +232,7 @@ func (l *LinkHandler) HandleDeleteLink(ctx *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param page query int false "Page number"
+// @Param pageSize query int false "Page size"
 // @Success 200 {array} dto.LinkDTO
 // @Router /api/v1/links [get]
 // @Security ApiKeyAuth
@@ -239,6 +240,10 @@ func (l *LinkHandler) HandleGetLinks(ctx *fiber.Ctx) error {
 	page := ctx.QueryInt("page")
 	if page < 0 {
 		page = 0
+	}
+	pageSize := ctx.QueryInt("pageSize")
+	if pageSize <= 0 {
+		pageSize = 10
 	}
 	user := ctx.Locals("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
@@ -249,7 +254,7 @@ func (l *LinkHandler) HandleGetLinks(ctx *fiber.Ctx) error {
 		})
 	}
 
-	links, err := l.repository.GetUserLinks(int64(userId), int32(page))
+	links, err := l.repository.GetUserLinks(int64(userId), int32(page), int32(pageSize))
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to get links",
