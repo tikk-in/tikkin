@@ -39,3 +39,8 @@ SELECT *
 FROM links
 WHERE expire_at < NOW()
 LIMIT @maxResults FOR UPDATE SKIP LOCKED;
+
+-- name: CountUserLinks :one
+SELECT COUNT(*)
+FROM links
+WHERE user_id = @UserId;

@@ -261,6 +261,13 @@ func (l *LinkHandler) HandleGetLinks(ctx *fiber.Ctx) error {
 		})
 	}
 
+	count, err := l.repository.CountUserLinks(int64(userId))
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get links count",
+		})
+	}
+
 	dtos := make([]dto.LinkDTO, len(links))
 	for i, link := range links {
 
@@ -277,5 +284,5 @@ func (l *LinkHandler) HandleGetLinks(ctx *fiber.Ctx) error {
 		}
 	}
 
-	return ctx.JSON(dtos)
+	return ctx.JSON(dto.ResultList{Data: dtos, Total: count})
 }

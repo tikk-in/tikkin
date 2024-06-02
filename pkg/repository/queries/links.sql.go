@@ -10,6 +10,19 @@ import (
 	"time"
 )
 
+const countUserLinks = `-- name: CountUserLinks :one
+SELECT COUNT(*)
+FROM links
+WHERE user_id = $1
+`
+
+func (q *Queries) CountUserLinks(ctx context.Context, userid int64) (int64, error) {
+	row := q.db.QueryRow(ctx, countUserLinks, userid)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createLink = `-- name: CreateLink :one
 INSERT INTO links (user_id, slug, description, expire_at, target_url)
 VALUES ($1, $2, $3, $4, $5)
