@@ -114,6 +114,7 @@ func (r *Repository) UpdateLink(id int64, link model.Link) (*model.Link, error) 
 		UserID:      link.UserId,
 		Description: &link.Description,
 		TargetUrl:   link.TargetUrl,
+		ExpireAt:    link.ExpireAt,
 	})
 
 	if err != nil {

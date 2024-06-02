@@ -202,15 +202,17 @@ const updateLink = `-- name: UpdateLink :one
 UPDATE links
 SET description = $1,
     target_url  = $2,
+    expire_at   = $3,
     updated_at  = NOW()
-WHERE id = $3
-  AND user_id = $4
+WHERE id = $4
+  AND user_id = $5
 RETURNING id, user_id, slug, description, banned, expire_at, target_url, created_at, updated_at
 `
 
 type UpdateLinkParams struct {
 	Description *string
 	TargetUrl   string
+	ExpireAt    *time.Time
 	ID          int64
 	UserID      int64
 }
@@ -219,6 +221,7 @@ func (q *Queries) UpdateLink(ctx context.Context, arg UpdateLinkParams) (Link, e
 	row := q.db.QueryRow(ctx, updateLink,
 		arg.Description,
 		arg.TargetUrl,
+		arg.ExpireAt,
 		arg.ID,
 		arg.UserID,
 	)
