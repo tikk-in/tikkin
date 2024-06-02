@@ -24,6 +24,7 @@ RETURNING *;
 UPDATE links
 SET description = @description,
     target_url  = @target_url,
+    expire_at   = @expire_at,
     updated_at  = NOW()
 WHERE id = @id
   AND user_id = @user_id
