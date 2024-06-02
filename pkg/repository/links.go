@@ -21,12 +21,12 @@ func (r *Repository) GetLinkByID(id int64) (*model.Link, error) {
 	return linkEntity.ToModel(), nil
 }
 
-func (r *Repository) GetUserLinks(userId int64, page int32) ([]model.Link, error) {
+func (r *Repository) GetUserLinks(userId int64, page, pageSize int32) ([]model.Link, error) {
 
 	params := queries.GetUserLinksParams{
 		Userid:      userId,
-		Maxresults:  20,
-		Queryoffset: page * 20,
+		Maxresults:  pageSize,
+		Queryoffset: page * pageSize,
 	}
 
 	results, err := r.db.Queries(context.Background()).GetUserLinks(context.Background(), params)
