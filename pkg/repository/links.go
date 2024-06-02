@@ -137,3 +137,12 @@ func (r *Repository) GetExpiredLinks(ctx context.Context) ([]model.Link, error) 
 	}
 	return links, nil
 }
+
+func (r *Repository) CountUserLinks(userId int64) (int64, error) {
+	count, err := r.db.Queries(context.Background()).CountUserLinks(context.Background(), userId)
+	if err != nil {
+		log.Err(err).Msg("Failed to count user links")
+		return 0, err
+	}
+	return count, nil
+}
