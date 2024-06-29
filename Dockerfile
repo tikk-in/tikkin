@@ -11,6 +11,7 @@ RUN apk update && apk upgrade && apk add --no-cache ca-certificates && rm -rf /v
 
 WORKDIR /app
 COPY --from=builder /app/tikkin /app/tikkin
+COPY --from=builder /app/template/ /app/template/
 COPY --from=builder /app/docs/swagger.json /app/docs/swagger.json
 COPY --from=builder /app/docs/swagger.yaml /app/docs/swagger.yaml
 
