@@ -51,7 +51,7 @@ func (e *EmailHandler) SendVerificationEmail(user model.User) error {
 		SiteUrl:          e.config.Site.URL,
 		SiteName:         e.config.Site.Name,
 		VerificationCode: *user.VerificationToken,
-		VerificationUrl:  e.config.Site.URL + "/api/v1/auth/verify/" + *user.VerificationToken,
+		VerificationUrl:  e.config.Site.URL + "/api/v1/users/verify/" + *user.VerificationToken,
 	}
 
 	buff := new(bytes.Buffer)
