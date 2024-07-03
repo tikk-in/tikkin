@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/aidarkhanov/nanoid/v2 v2.0.5
 	github.com/ansrivas/fiberprometheus/v2 v2.6.1
-	github.com/gofiber/contrib/jwt v1.0.9
+	github.com/gofiber/contrib/jwt v1.0.10
 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/gofiber/swagger v1.0.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
